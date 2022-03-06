@@ -1,0 +1,67 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+public class TiltingScript : MonoBehaviour
+{
+    // User input
+    Vector2 inputTilt;
+
+    // variables for the tilting
+    public float maxTilt;
+    public float lerpTime;
+    public float sensitivity;
+
+    // Forgot what this did
+    public float cameraFacing;
+    public bool postitiveFacing;
+
+    // Stops Tilting Input when false
+    public bool canTilt = false;
+    public Quaternion tiltSend;
+
+    public void StartMovement()
+    {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+        canTilt = true;
+    }
+
+    private void FixedUpdate()
+    {
+        // Clamps the roation of the tilt
+        float xRotation = Mathf.Clamp(inputTilt.y, -maxTilt, maxTilt);
+        float zRotation = Mathf.Clamp(-inputTilt.x, -maxTilt, maxTilt);
+
+        // Changes the postion of the board is facing
+        if (postitiveFacing)
+        {
+            tiltSend = Quaternion.Lerp(transform.localRotation, Quaternion.Euler(xRotation, cameraFacing, zRotation), Time.deltaTime * lerpTime * sensitivity);
+            transform.localRotation = tiltSend;
+        }
+        else
+        {
+            tiltSend = Quaternion.Lerp(transform.localRotation, Quaternion.Euler(-xRotation, cameraFacing, -zRotation), Time.deltaTime * lerpTime * sensitivity);
+            transform.localRotation = tiltSend;
+        }
+
+    }
+
+    public void tiltInput(InputAction.CallbackContext context)
+    {
+        if (canTilt)
+        {
+            // Takes the input from the input and creates the tilt
+            inputTilt = context.ReadValue<Vector2>().normalized * maxTilt;
+        }
+        else
+        {
+            // goes back to the Origin spot
+            for (int i = 0; i < 200; i++)
+            {
+                inputTilt = Vector2.Lerp(inputTilt, Vector2.zero, Time.deltaTime * lerpTime * sensitivity);
+            }
+        }
+    }
+}
